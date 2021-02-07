@@ -1,12 +1,18 @@
-const express = require('express')
-const axios = require('axios')
+import express from 'express';
+import axios from 'axios';
 const app = express()
 
 const port = 3000
 
 const baseRequestUri = "https://steamcommunity.com/market/priceoverview/?appid=730&currency=3&market_hash_name=";
 
-var dataMap = new Map();
+interface MapEntry {
+    data: number,
+    timestamp: number
+}
+
+
+const dataMap = new Map<string, MapEntry>();
 
 /// Sample value in Map:
 
@@ -15,26 +21,30 @@ var dataMap = new Map();
 ///     timestamp: 235335353
 /// }
 
-async function getDataFromSteam(name) {
-    let url = baseRequestUri + name;
+async function getDataFromSteam(name: string) {
+    const url = baseRequestUri + name;
     try {
-        let resp = await axios.get(url);
-        let price = resp.data.lowest_price;
+        const resp = await axios.get(url, {
+            validateStatus: (status) => {
+                return status < 500;
+            }
+        });
+        const price = resp.data.lowest_price;
         console.log(price);
         return price;
     } catch (e) {
-        return 0;
+        return -1;
     }
 }
 
-function createMapObject(value) {
+function createMapObject(value: number) {
     return {
         data: value,
         timestamp: Date.now()
     }
 }
 
-function createReturnObject(price) {
+function createReturnObject(price: number) {
     return {
         value: price
     }
@@ -50,22 +60,19 @@ app.get('/api/', async(req, res, next) => {
 })
 
 app.get('/api/:itemname', async(req, res, next) => {
-
-
-    console.log(req.params);
-    var name = req.params.itemname;
+    const name = req.params.itemname;
     console.log(name);
 
     if (name === null || name === undefined) {
-        console.log("Undefined Name...")
+        console.log("Request with undefined Name...")
         res.send(createReturnObject(0))
     }
 
-    let mapValue = dataMap.get(name)
+    const mapValue = dataMap.get(name)
     if (mapValue !== undefined) {
         if (mapValue.timestamp !== null) {
             if (mapValue.timestamp + 180000 > Date.now()) {
-                console.log("Sending cache result...")
+                console.log(`Sending cache result for ${name}... ${mapValue.data}`)
                 res.send(createReturnObject(mapValue.data))
                 next()
                 return;
@@ -73,13 +80,13 @@ app.get('/api/:itemname', async(req, res, next) => {
         }
     }
 
-    let price = await getDataFromSteam(name);
+    const price = await getDataFromSteam(name);
 
-    let priceNum = parseFloat(price.toString().replace(',', '.'));
+    const priceNum = parseFloat(price.toString().replace(',', '.'));
 
     console.log(priceNum)
 
-    if (priceNum !== null || priceNum !== undefined) {
+    if (priceNum !== null && priceNum !== undefined && priceNum > 0) {
         dataMap.set(name, createMapObject(priceNum));
 
         res.send(createReturnObject(priceNum))
