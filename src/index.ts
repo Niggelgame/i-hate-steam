@@ -11,6 +11,9 @@ interface MapEntry {
     timestamp: number
 }
 
+function Sleep(milliseconds: number) {
+    return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
 
 const dataMap = new Map<string, MapEntry>();
 
@@ -21,23 +24,32 @@ const dataMap = new Map<string, MapEntry>();
 ///     timestamp: 235335353
 /// }
 
-async function getDataFromSteam(name: string) {
+async function getDataFromSteam(name: string, requestamount: number = 0) : Promise<number> {
     const url = baseRequestUri + name;
     try {
         const resp = await axios.get(url, {
             validateStatus: (status) => {
-                return status < 500;
+                return status >= 200 && status < 300 || status === 500;
             }
         });
+
+        // Check for successful Steam response
+        const successful = resp.data.success;
+        if(!successful) {
+            return -1;
+        }
         const price = resp.data.lowest_price;
-        console.log(price);
         return price;
     } catch (e) {
-        return -1;
+        if(requestamount > 5) {
+            return -1
+        }
+        await Sleep(500)
+        return getDataFromSteam(name, requestamount++);
     }
 }
 
-function createMapObject(value: number) {
+function createMapObject(value: number) : MapEntry {
     return {
         data: value,
         timestamp: Date.now()
@@ -61,7 +73,6 @@ app.get('/api/', async(req, res, next) => {
 
 app.get('/api/:itemname', async(req, res, next) => {
     const name = req.params.itemname;
-    console.log(name);
 
     if (name === null || name === undefined) {
         console.log("Request with undefined Name...")
@@ -84,9 +95,9 @@ app.get('/api/:itemname', async(req, res, next) => {
 
     const priceNum = parseFloat(price.toString().replace(',', '.'));
 
-    console.log(priceNum)
+    console.log(`Request for ${name} resolved into ${priceNum}`)
 
-    if (priceNum !== null && priceNum !== undefined && priceNum > 0) {
+    if (priceNum !== null && priceNum !== undefined) {
         dataMap.set(name, createMapObject(priceNum));
 
         res.send(createReturnObject(priceNum))
@@ -94,8 +105,6 @@ app.get('/api/:itemname', async(req, res, next) => {
     } else {
         res.send(createReturnObject(0))
     }
-
-
 })
 
 app.listen(port, () => {
