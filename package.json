@@ -12,7 +12,7 @@
         "start": "node .",
         "clean": "rimraf dist/*",
         "dev": "nodemon --watch src -e ts,ejs --exec npm run dev:start",
-        "dev:start": "npm-run-all build start"
+        "dev:start": "npm-run-all start"
     },
     "keywords": [],
     "author": "",

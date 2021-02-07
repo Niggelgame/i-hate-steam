@@ -45,7 +45,7 @@ async function getDataFromSteam(name: string, requestamount: number = 0) : Promi
             return -1
         }
         await Sleep(500)
-        return getDataFromSteam(name, requestamount++);
+        return getDataFromSteam(name, requestamount+=1);
     }
 }
 
