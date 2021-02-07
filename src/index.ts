@@ -24,7 +24,7 @@ const dataMap = new Map<string, MapEntry>();
 ///     timestamp: 235335353
 /// }
 
-async function getDataFromSteam(name: string, requestamount: number = 0) : Promise<number> {
+async function getDataFromSteam(name: string, requestCount: number = 0) : Promise<number> {
     const url = baseRequestUri + name;
     try {
         const resp = await axios.get(url, {
@@ -41,12 +41,12 @@ async function getDataFromSteam(name: string, requestamount: number = 0) : Promi
         const price = resp.data.lowest_price;
         return price;
     } catch (e) {
-        console.log(e.response)
-        if(requestamount > 5) {
+        console.log(e.response.status)
+        if(requestCount > 5) {
             return -1
         }
         await Sleep(10000)
-        return getDataFromSteam(name, requestamount+=1);
+        return getDataFromSteam(name, requestCount+=1);
     }
 }
 
