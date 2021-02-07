@@ -45,7 +45,7 @@ async function getDataFromSteam(name: string, requestCount: number = 0) : Promis
         if(requestCount > 5) {
             return -1
         }
-        await Sleep(10000)
+        await Sleep(20000)
         return getDataFromSteam(name, requestCount+=1);
     }
 }
