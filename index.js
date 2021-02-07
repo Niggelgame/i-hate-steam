@@ -40,6 +40,15 @@ function createReturnObject(price) {
     }
 }
 
+app.get('/api/', async(req, res, next) => {
+    console.log(`Someone us uhhhh ${req.headers['x-forwarded-for'] || req.connection.remoteAddress}`)
+    res.send({
+        value: 0,
+        message: 'Welcome to the API - do not use me if not explicitly told to do so.'
+    })
+    next()
+})
+
 app.get('/api/:itemname', async(req, res, next) => {
 
 
