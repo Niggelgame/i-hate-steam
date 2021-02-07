@@ -41,10 +41,11 @@ async function getDataFromSteam(name: string, requestamount: number = 0) : Promi
         const price = resp.data.lowest_price;
         return price;
     } catch (e) {
+        console.log(e.response)
         if(requestamount > 5) {
             return -1
         }
-        await Sleep(5000)
+        await Sleep(10000)
         return getDataFromSteam(name, requestamount+=1);
     }
 }
