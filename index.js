@@ -55,7 +55,7 @@ app.get('/api/:itemname', async(req, res, next) => {
     let mapValue = dataMap.get(name)
     if (mapValue !== undefined) {
         if (mapValue.timestamp !== null) {
-            if (mapValue.timestamp + 60000 > Date.now()) {
+            if (mapValue.timestamp + 180000 > Date.now()) {
                 console.log("Sending cache result...")
                 res.send(createReturnObject(mapValue.data))
                 next()
